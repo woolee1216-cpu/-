@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>타이어핑 봇 V3</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div><div id="loading-msg">처리 중...</div></div>
+
+<div id="resize-handle"></div>
+
+<!-- 헤더 -->
+<div id="header">
+  <h1>🏎 타이어핑 봇 V3</h1>
+  <div class="hdr-right">
+    <!-- 자동갱신 카운트다운: 탭 전환과 무관하게 항상 헤더에 표시 -->
+    <span id="auto-status-header" style="font-size:11px;color:#7c3aed;font-weight:500;white-space:nowrap;"></span>
+    <div id="account-wrap">
+      <select id="sel-account" title="계정 선택"></select>
+      <button id="btn-account-add" title="현재 로그인 계정 추가" class="btn-acct">＋</button>
+      <button id="btn-account-del" title="선택 계정 삭제" class="btn-acct btn-acct-del">✕</button>
+    </div>
+    <span id="login-status">미로그인</span>
+    <button class="btn-gray btn-sm" id="ord-margintabs-settings" title="마진 탭(창고/거래처 등) 및 할인율 규칙 설정" style="font-size:11px;">⚙️ 마진탭 설정</button>
+    <button id="btn-cache-mgr" class="btn-popout" title="캐시 관리" style="font-size:11px;">🗑️</button>
+    <button id="btn-popout" class="btn-popout" title="팝업창으로 분리">⧉</button>
+  </div>
+</div>
+
+<!-- 탭 -->
+<div id="tab-bar">
+  <button class="tab-btn active" data-tab="price">📊 최저가 봇</button>
+  <button class="tab-btn" data-tab="mine">🏪 내 판매현황</button>
+  <button class="tab-btn" data-tab="orders">📋 판매내역</button>
+  <button class="tab-btn" data-tab="fav">⭐ 즐겨찾기</button>
+</div>
+
+<!-- ══ 탭1: 최저가 봇 ══ -->
+<div id="tab-price" class="tab-content active">
+  <div id="search-bar">
+    <div class="search-row">
+      <span class="search-label">SIZE</span>
+      <input type="text" id="inp-size" placeholder="사이즈(245 45 18) 또는 제조사(넥센)" class="inp-size" autocomplete="off">
+      <select id="sel-mfr"><option value="">제조사</option></select>
+      <select id="sel-prod"><option value="">제품명</option></select>
+    </div>
+    <div class="search-row">
+      <select id="sel-width" class="sel-size">
+        <option value="단면폭">단면폭</option>
+        <option>145</option><option>155</option><option>165</option><option>175</option>
+        <option>185</option><option>195</option><option>205</option><option>215</option>
+        <option>225</option><option>235</option><option>245</option><option>255</option>
+        <option>265</option><option>275</option><option>285</option><option>295</option>
+        <option>305</option><option>315</option><option>325</option><option>335</option>
+      </select>
+      <select id="sel-height" class="sel-size">
+        <option value="편평비">편평비</option>
+        <option>25</option><option>30</option><option>35</option><option>40</option>
+        <option>45</option><option>50</option><option>55</option><option>60</option>
+        <option>65</option><option>70</option><option>75</option><option>80</option>
+      </select>
+      <select id="sel-inch" class="sel-size">
+        <option value="인치">인치</option>
+        <option>12</option><option>13</option><option>14</option><option>15</option>
+        <option>16</option><option>17</option><option>18</option><option>19</option>
+        <option>20</option><option>21</option><option>22</option><option>23</option><option>24</option>
+      </select>
+      <select id="sel-dot" class="sel-size">
+        <option value="">DOT</option>
+        <option>2026</option><option>2025</option><option>2024</option>
+        <option>2023</option><option>2022</option><option>2021</option><option>2020</option>
+      </select>
+      <select id="sel-order" class="sel-order">
+        <option value="">등록일순</option>
+        <option value="sales_desc">인기순</option>
+        <option value="price_asc">최저가순</option>
+        <option value="price_desc">최고가순</option>
+        <option value="dc_desc">DC율순</option>
+      </select>
+      <button class="btn-blue" id="btn-search">검색하기</button>
+      <button class="btn-purple" id="btn-fresh">🔄</button>
+      <button class="btn-gray" id="btn-reset">↺</button>
+    </div>
+  </div>
+
+  <div id="action-bar" style="display:flex;flex-direction:column;justify-content:flex-start;text-align:left;width:100%;">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;width:100%;">
+      <button class="btn-light" id="btn-check-all">전체선택</button>
+      <button class="btn-light" id="btn-uncheck-all">전체해제</button>
+      <span class="sep">|</span>
+      <div id="ab-tabs" style="display:flex;flex-wrap:wrap;gap:2px;justify-content:flex-start;">
+        <button class="ab-tab active" data-abtab="price">가격조정</button>
+        <button class="ab-tab" data-abtab="dot">DOT</button>
+        <button class="ab-tab" data-abtab="ship">출고</button>
+        <button class="ab-tab" data-abtab="biz">거래처</button>
+        <button class="ab-tab" data-abtab="reg">등록설정</button>
+        <button class="ab-tab" data-abtab="misc">기타</button>
+        <button class="ab-tab" data-abtab="auto">자동갱신</button>
+      </div>
+    </div>
+
+    <div id="ab-panels">
+      <div class="ab-panel" data-abpanel="price">
+        <button class="btn-red" id="btn-bulk-low">⬇ 최저가적용</button>
+        <button class="btn-green" id="btn-bulk-raise">⬆ 2등 -10원</button>
+        <button class="btn-sky" id="btn-bulk-third">⬆ 3등 -10원</button>
+        <button class="btn-teal" id="btn-bulk-fourth">⬆ 4등 -10원</button>
+        <label>목표마진<input type="number" id="inp-target-margin" placeholder="예: 500" style="width:70px;">원</label>
+        <button class="btn-purple" id="btn-bulk-margin" title="선택한 상품의 판매가를, 지정한 마진(원가+수수료+택배비 제외 순이익)이 나오도록 인상/조정합니다">🎯 마진 적용</button>
+        <label>내DC%<input type="number" id="inp-bulk-dc" placeholder="예: 40" style="width:56px;">%</label>
+        <button class="btn-purple" id="btn-bulk-dc" title="선택한 내 판매상품의 판매가를, 지정한 내DC%(공장도가 대비 할인율)에 맞춰 한꺼번에 변경합니다">💯 DC% 일괄적용</button>
+      </div>
+
+      <div class="ab-panel" data-abpanel="dot" style="display:none;">
+        <label><input type="text" id="inp-bulk-dot" placeholder="예: 2024" style="width:56px;"></label>
+        <button class="btn-teal" id="btn-bulk-dot" title="선택한 내 판매상품의 DOT(생산년도)를 한꺼번에 변경합니다">📅 DOT 일괄적용</button>
+      </div>
+
+      <div class="ab-panel" data-abpanel="ship" style="display:none;">
+        <button class="btn-teal" id="btn-bulk-sameday" title="선택한 판매중 상품을 당일출고로 일괄 변경">🚚 당일출고로 변경</button>
+        <button class="btn-sky" id="btn-bulk-nextday" title="선택한 판매중 상품을 익일출고로 일괄 변경">🌙 익일출고로 변경</button>
+        <button class="btn-gray" id="btn-even-nolimit" data-on="1" title="클릭하여 등록시 짝수구매 제한 여부를 토글합니다">🔓 짝수출고 제한없음</button>
+        <label>기준시간
+          <select id="sel-send-hour" style="width:52px;">
+            <option value="00">00시</option><option value="01">01시</option><option value="02">02시</option>
+            <option value="03">03시</option><option value="04">04시</option><option value="05">05시</option>
+            <option value="06">06시</option><option value="07">07시</option><option value="08">08시</option>
+            <option value="09">09시</option><option value="10">10시</option><option value="11">11시</option>
+            <option value="12">12시</option><option value="13">13시</option><option value="14">14시</option>
+            <option value="15" selected>15시</option><option value="16">16시</option><option value="17">17시</option>
+            <option value="18">18시</option>
+          </select>
+          <select id="sel-send-min" style="width:52px;">
+            <option value="00" selected>00분</option><option value="10">10분</option><option value="20">20분</option>
+            <option value="30">30분</option><option value="40">40분</option><option value="50">50분</option>
+          </select>
+        </label>
+        <button class="btn-teal" id="btn-bulk-sendtime" title="선택한(체크한) 판매중 상품의 출고 기준시간을 위에서 지정한 시:분으로 한꺼번에 변경">⏰ 일괄변경</button>
+      </div>
+
+      <div class="ab-panel" data-abpanel="biz" style="display:none;">
+        <button class="btn-purple" id="btn-bulk-biz" title="선택한 상품을 거래처 탭으로 한꺼번에 배정">📁 거래처로 넘기기</button>
+      </div>
+
+      <div class="ab-panel" data-abpanel="reg" style="display:none;">
+        <label>등록수량<input type="number" id="inp-stock" value="4" min="0" max="999"></label>
+        <label>제한DC%<input type="number" id="inp-maxdc" placeholder="없음" min="0" max="100"></label>
+        <label>메모<input type="text" id="inp-memo" placeholder="등록 메모 (비우면 기본값)" style="width:180px;"></label>
+        <button class="btn-purple" id="btn-bulk-upload" title="체크된 미판매 상품을 위 등록수량/메모 설정으로 한꺼번에 등록합니다">📤 선택상품 일괄등록</button>
+      </div>
+
+      <div class="ab-panel" data-abpanel="misc" style="display:none;">
+        <button class="btn-orange" id="btn-refresh-now">🔃 가격새로고침</button>
+      </div>
+
+      <div class="ab-panel" data-abpanel="auto" style="display:none;">
+        <select id="sel-interval">
+          <option value="1">1분</option><option value="2">2분</option>
+          <option value="5" selected>5분</option><option value="10">10분</option><option value="30">30분</option>
+        </select>
+        <button class="btn-sky" id="btn-auto">▶ 자동갱신</button>
+        <!-- auto-status는 헤더로 이동 (탭 전환 시에도 항상 보임) -->
+        <span id="auto-status" style="display:none;"></span>
+      </div>
+    </div>
+  </div>
+  <style>
+    .ab-panel{display:flex;align-items:center;justify-content:flex-start;gap:4px;flex-wrap:wrap;padding:5px 6px;background:#f9fafb;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 6px 6px;}
+    .ab-tab{padding:4px 10px;font-size:11px;border:1px solid #d1d5db;border-bottom:none;background:#f3f4f6;color:#4b5563;cursor:pointer;border-radius:6px 6px 0 0;}
+    .ab-tab.active{background:#f9fafb;color:#111827;font-weight:700;border-color:#e5e7eb;box-shadow:0 -1px 0 #f9fafb;}
+  </style>
+
+  <!-- 거래처 탭 바 (내 판매현황 탭에서만 표시) -->
+  <div id="biz-tab-bar" style="display:none;align-items:center;flex-wrap:wrap;gap:4px;padding:4px 8px;background:#f0fdf4;border-bottom:1px solid #86efac;font-size:11px;">
+    <span style="color:#15803d;font-weight:bold;white-space:nowrap;margin-right:2px;">거래처</span>
+    <!-- 동적으로 탭 버튼이 생성됨 -->
+  </div>
+  <!-- 거래처 탭 배정 팝업 (전역) -->
+  <div id="biz-assign-popup" style="display:none;position:fixed;z-index:10000;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);padding:10px;min-width:170px;font-size:11px;"></div>
+  <!-- 출고방식 변경 팝업 -->
+  <div id="sendkind-popup" style="display:none;position:fixed;z-index:10000;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);padding:6px;font-size:11px;min-width:140px;"></div>
+
+  <div id="mine-mfr-bar" style="display:none;flex-wrap:wrap;gap:4px;padding:5px 8px;background:#f0f9ff;border-bottom:1px solid #bae6fd;">
+    <button class="mfr-tab-btn active" data-mfr="">전체</button>
+  </div>
+
+  <!-- 🏷 제조사 빠른필터 (최저가봇 검색결과에서만 표시) — 검색 후 제조사 하나만 골라 선택→가격설정/수정 -->
+  <div id="price-mfr-bar" style="display:none;flex-wrap:wrap;align-items:center;gap:4px;padding:5px 8px;background:#f0f9ff;border-bottom:1px solid #bae6fd;">
+    <span style="color:#0369a1;font-weight:bold;white-space:nowrap;margin-right:2px;font-size:11px;">제조사</span>
+  </div>
+
+  <!-- ⭐ 즐겨찾기 자동 재고 조정 (즐겨찾기 보기에서만 표시) -->
+  <div id="fav-autostock-bar" style="display:none;align-items:center;flex-wrap:wrap;gap:6px;padding:5px 8px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;margin:4px 0;font-size:11px;">
+    <strong style="color:#b45309;">⭐ 자동 재고 채우기</strong>
+    <label>주기
+      <select id="fav-as-interval" style="font-size:11px;">
+        <option value="10">10분</option>
+        <option value="30">30분</option>
+        <option value="60" selected>1시간</option>
+        <option value="120">2시간</option>
+        <option value="180">3시간</option>
+        <option value="360">6시간</option>
+        <option value="720">12시간</option>
+      </select>
+    </label>
+    <label>채울 수량
+      <input type="number" id="fav-as-target" value="4" min="1" max="999" style="width:50px;font-size:11px;">
+    </label>
+    <button class="btn-sky btn-sm" id="fav-as-toggle">▶ 시작</button>
+    <button class="btn-gray btn-sm" id="fav-as-run" title="지금 즉시 1회 실행해서 재고를 채웁니다">지금 실행</button>
+    <span id="fav-as-status" style="color:#92400e;"></span>
+    <button class="btn-gray btn-sm" id="fav-backup" title="즐겨찾기를 파일로 저장">💾 백업</button>
+    <button class="btn-gray btn-sm" id="fav-restore" title="파일에서 즐겨찾기 불러오기">📂 복원</button>
+    <input type="file" id="fav-restore-file" accept="application/json,.json" style="display:none;">
+    <button class="btn-gray btn-sm" id="fav-as-logbtn" title="실행 기록" style="margin-left:auto;">📋 기록</button>
+  </div>
+  <div id="fav-as-log" style="display:none;max-height:120px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:6px 8px;margin:0 0 4px;font-size:10px;color:#374151;white-space:pre-wrap;"></div>
+
+  <div id="summary-bar">
+    <span id="summary-text">로그인 후 검색하세요</span>
+    <input type="text" id="inp-quick-filter" placeholder="🔍 결과 내 검색 (제조사·제품·사이즈·DOT·판매점)" autocomplete="off"
+      title="현재 불러온 목록에서 입력한 단어가 들어간 행만 표시 (띄어쓰기로 여러 단어 AND 검색)"
+      style="flex:0 1 230px;min-width:130px;padding:2px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;">
+    <span id="filter-status"></span>
+    <button class="btn-gray" id="btn-clear-filter" style="visibility:hidden;padding:1px 6px;">✕ 필터초기화</button>
+    <button class="btn-gray" id="btn-excel" style="padding:1px 8px;" title="현재 화면 목록을 엑셀로 저장">📥 엑셀</button>
+  </div>
+
+  <!-- 📋 판매내역 패널 (판매내역 탭에서만 표시) -->
+  <div id="orders-panel" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+    <!-- 툴바 -->
+    <div id="orders-toolbar" style="display:flex;flex-direction:column;gap:5px;padding:5px 8px;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:11px;">
+      <!-- 1줄: 날짜 · 상품주문번호 · 제품번호(형용코드) -->
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+        <input type="date" id="ord-startdate" style="font-size:11px;padding:2px 4px;" title="시작일시">
+        <span style="color:#9ca3af;">~</span>
+        <input type="date" id="ord-enddate" style="font-size:11px;padding:2px 4px;" title="종료일시">
+        <select id="ord-sesstype" style="font-size:11px;padding:2px 4px;">
+          <option value="item">상품주문번호</option>
+          <option value="order">통합주문번호</option>
+        </select>
+        <input type="text" id="ord-sessnum" placeholder="주문번호" autocomplete="off"
+          style="width:90px;padding:2px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;">
+        <input type="text" id="ord-code" placeholder="제품번호(형용코드)" autocomplete="off"
+          style="width:110px;padding:2px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;">
+      </div>
+      <!-- 2줄: 처리상태 · 정산상태 · 검색어 · 제조사 · 제품명 · 조회 -->
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+        <select id="ord-status" style="font-size:11px;padding:2px 4px;" title="처리상태">
+          <option value="">전체 상태</option>
+          <option value="1">입금전취소</option>
+          <option value="2">입금후취소</option>
+          <option value="5">입금대기</option>
+          <option value="6">입금완료</option>
+          <option value="7">주문확인</option>
+          <option value="8">배송 준비중</option>
+          <option value="10">배송중</option>
+          <option value="12">배송완료</option>
+          <option value="13">구매확정</option>
+          <option value="21">상품미도착</option>
+          <option value="22">상품미도착 처리완료</option>
+          <option value="23">교환 처리중</option>
+          <option value="24">교환 완료</option>
+          <option value="25">반품 처리중</option>
+          <option value="26">반품 완료</option>
+          <option value="27">환불 처리중</option>
+          <option value="28">환불 완료</option>
+          <option value="31">부분취소 처리중</option>
+          <option value="32">부분취소 완료</option>
+          <option value="33">부분반품 처리중</option>
+          <option value="34">부분반품 완료</option>
+          <option value="35">재고없음</option>
+        </select>
+        <select id="ord-accountstatus" style="font-size:11px;padding:2px 4px;" title="정산상태">
+          <option value="">전체 정산상태</option>
+          <option value="1">처리중</option>
+          <option value="2">정산완료</option>
+        </select>
+        <input type="text" id="ord-search" placeholder="검색어" autocomplete="off"
+          style="flex:0 1 110px;min-width:80px;padding:2px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;">
+        <select id="ord-company" style="font-size:11px;padding:2px 4px;max-width:100px;" title="제조사">
+          <option value="0">제조사</option>
+        </select>
+        <select id="ord-pattern" style="font-size:11px;padding:2px 4px;max-width:110px;" title="제품명">
+          <option value="0">제품명</option>
+        </select>
+        <button class="btn-sky btn-sm" id="ord-refresh">🔍 조회</button>
+        <button class="btn-gray btn-sm" id="ord-reload" title="현재 페이지 새로고침">🔄</button>
+        <span id="ord-status-txt" style="color:#6b7280;font-size:10px;"></span>
+        <div id="ord-pagination" style="display:flex;gap:2px;align-items:center;margin-left:4px;flex-wrap:wrap;"></div>
+        <button class="btn-gray btn-sm" id="ord-excel" style="margin-left:auto;">📥 엑셀</button>
+      </div>
+    </div>
+    <!-- 상단: 판매내역 테이블 (클릭하면 상세 표시) -->
+    <div id="orders-table-wrap" style="flex:1;overflow:auto;border-bottom:1px solid #e5e7eb;min-height:80px;">
+      <table id="orders-table" style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead id="orders-thead" style="position:sticky;top:0;background:#f1f5f9;z-index:1;"></thead>
+        <tbody id="orders-tbody"></tbody>
+      </table>
+    </div>
+    <!-- 중간: 주문 상세 (행 클릭 시 표시) -->
+    <div id="ord-detail-panel" style="display:none;height:260px;overflow:auto;border-bottom:2px solid #c7d2fe;background:#f8faff;padding:6px 10px;font-size:11px;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+        <strong style="color:#1e40af;">📄 주문 상세</strong>
+        <span id="ord-detail-id" style="color:#6b7280;font-size:10px;"></span>
+        <button class="btn-gray btn-sm" id="ord-detail-close" style="margin-left:auto;font-size:10px;">✕ 닫기</button>
+      </div>
+      <div id="ord-detail-body"></div>
+      <div id="ord-margin-result" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+    </div>
+    <!-- 하단: 주문확인 게러지 그리드 -->
+    <div style="display:flex;align-items:center;gap:8px;padding:3px 8px;background:#e8f0fe;border-bottom:1px solid #c7d2fe;font-size:11px;flex-shrink:0;">
+      <strong style="color:#1e40af;">🚚 타이어게러지 (주문확인)</strong>
+      <select id="garage-status-filter" style="font-size:10px;padding:1px 3px;">
+        <option value="">전체</option>
+        <option value="입금완료">입금완료만</option>
+        <option value="주문확인">주문확인만</option>
+      </select>
+      <span id="garage-count" style="color:#3b82f6;font-size:10px;"></span>
+      <span id="garage-headers-debug" style="color:#9ca3af;font-size:9px;cursor:help;" title="">?헤더확인</span>
+      <input id="garage-cell-val" type="text" placeholder="셀 클릭 → 값 / 행번호 클릭 → 한 줄 (Ctrl+C 복사)" readonly
+        style="flex:1;padding:2px 6px;border:1px solid #93c5fd;border-radius:4px;font-size:10px;background:#fff;min-width:0;">
+      <button class="btn-gray btn-sm" id="garage-copy-all" title="전체 내용을 복사 (엑셀에 붙여넣기)">📋 전체 복사</button>
+      <button class="btn-gray btn-sm" id="garage-excel">📥 게러지 엑셀</button>
+      <button class="btn-gray btn-sm" id="garage-gsheet-settings" title="주문확인 시 구글 스프레드시트에 자동 입력">📊 시트연동</button>
+    </div>
+    <div id="garage-grid-wrap" style="flex:1;overflow:auto;background:#fff;font-family:'맑은 고딕',sans-serif;min-height:100px;"></div>
+  </div>
+
+  <div id="table-wrap">
+    <table id="main-table">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div id="table-more-bar" style="display:none;padding:6px 10px;text-align:center;background:#f0f9ff;border-top:1px solid #bae6fd;font-size:11px;flex-shrink:0;">
+    <span id="table-more-text" style="color:#0369a1;"></span>
+    <button class="btn-sky btn-sm" id="btn-table-more" style="margin-left:8px;">500개 더보기</button>
+  </div>
+  <div id="status-bar">준비</div>
+</div>
+
+<!-- ══ 탭2: 재고 관리 ══ -->
+<div id="tab-stock" class="tab-content">
+
+  <div class="s-header-bar">
+    <div class="s-conn-info">
+      <span id="stock-conn-status" class="conn-dot">⚪</span>
+      <span id="stock-sheet-name" class="conn-name">미연결</span>
+    </div>
+    <div class="s-btn-group">
+      <button class="btn-gray btn-xs" id="stock-btn-setting">⚙️ 설정</button>
+      <button class="btn-sky btn-xs" id="stock-btn-refresh">🔄 새로고침</button>
+      <button class="btn-orange btn-xs" id="stock-btn-sync-now">⚡ 동기화</button>
+      <button class="btn-purple btn-xs" id="stock-btn-match">🔗 신규매칭</button>
+      <button class="btn-gray btn-xs" id="stock-btn-rematch">🔁 전체재매칭</button>
+    </div>
+  </div>
+
+  <div id="stock-setting-panel" class="s-setting-panel" style="display:none;">
+    <div class="s-setting-title">⚙️ Google Sheets 연결</div>
+    <div class="s-setting-row">
+      <input type="text" id="stock-inp-url" placeholder="Apps Script 웹앱 URL" class="s-url-inp">
+      <button class="btn-blue btn-sm" id="stock-btn-save-url">저장</button>
+      <button class="btn-gray btn-sm" id="stock-btn-test">확인</button>
+    </div>
+  </div>
+
+  <div class="s-search-bar">
+    <input type="text" id="stock-inp-search" placeholder="🔍 브랜드, 패턴, 사이즈" class="s-search-inp">
+    <select id="stock-sel-sheet" class="s-sel">
+      <option value="">전체 시트</option>
+      <option>2026 재고표</option>
+    </select>
+    <select id="stock-sel-status" class="s-sel">
+      <option value="">전체</option>
+      <option value="soldout">품절</option>
+      <option value="low">부족</option>
+      <option value="ok">정상</option>
+      <option value="noid">tire_id없음</option>
+      <option value="unlisted">⚠️ 재고있는데 미판매</option>
+    </select>
+    <button class="btn-blue btn-sm" id="stock-btn-search">검색</button>
+  </div>
+
+  <div id="stock-summary" class="s-summary"></div>
+
+  <div class="s-table-wrap">
+    <table class="s-table" id="stock-table">
+      <thead>
+        <tr>
+          <th>브랜드</th><th>패턴</th><th>패턴코드</th>
+          <th class="th-yellow">사이즈</th>
+          <th>피수</th><th>DOT</th><th>공장도가</th><th>수량</th>
+          <th class="th-orange">변동재고</th>
+          <th class="th-purple">장착수량</th>
+          <th class="th-purple">당일직배송</th>
+          <th class="th-blue">당일택배</th>
+          <th class="th-blue">택배 핑&호성</th>
+          <th class="th-blue">직배송 핑&호성</th>
+          <th class="th-green">11번가</th>
+          <th class="th-green">스토어팜</th>
+          <th class="th-green">롯데온&쿠팡</th>
+          <th class="th-yellow">매일할인율</th>
+          <th class="th-yellow">원가</th>
+          <th>상태</th>
+          <th class="th-blue">tire_id</th>
+          <th>핑상태</th>
+        </tr>
+      </thead>
+      <tbody id="stock-tbody"></tbody>
+    </table>
+    <div id="stock-empty" class="s-empty">연결 후 새로고침 해주세요</div>
+  </div>
+
+  <div class="s-log-wrap">
+    <div id="stock-log-toggle" class="s-log-title">🔄 동기화 로그 ▾</div>
+    <div id="stock-sync-log" class="s-log-body"></div>
+  </div>
+
+  <div id="stock-status" class="s-status">준비</div>
+</div>
+
+
+<script src="libs/xlsx.full.min.js"></script>
+<script src="sidebar.js"></script>
+</body>
+</html>

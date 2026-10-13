@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "타이어핑 봇 V3",
+  "version": "3.0",
+  "description": "타이어핑 재고연동 - 최저가 조회/가격변경/자동등록/재고관리",
+  "permissions": [
+    "scripting",
+    "tabs",
+    "storage",
+    "alarms",
+    "sidePanel",
+    "windows"
+  ],
+  "host_permissions": [
+    "https://www.tireping.com/*",
+    "https://*.supabase.co/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "action": {
+    "default_title": "타이어핑 봇 V3",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.tireping.com/sell/price/insert*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
